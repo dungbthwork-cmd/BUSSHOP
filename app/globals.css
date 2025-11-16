@@ -1,0 +1,27 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --radius: 16px; }
+
+body { @apply text-gray-900; }
+html { scroll-behavior: smooth; }
+.container { @apply mx-auto max-w-6xl px-4; }
+
+.text-gradient { @apply bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent; }
+.hero-gradient { @apply bg-gradient-to-br from-amber-200 via-orange-200 to-rose-100; }
+.glass { @apply bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/50; }
+.card-hover { @apply transition hover:shadow-lg; }
+.btn-glow { box-shadow: 0 8px 24px rgba(255,127,26,.25); }
+.shadow-soft { box-shadow: 0 10px 30px rgba(0,0,0,.06); }
+
+@keyframes pulse-dot { 0%{transform:scale(1);opacity:.9} 50%{transform:scale(1.25);opacity:.5} 100%{transform:scale(1);opacity:.9} }
+.dot-live { width:8px;height:8px;border-radius:9999px;background:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,.2);animation:pulse-dot 1.6s ease-in-out infinite; }
+.countdown { @apply inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] text-amber-800; }
+.badge-chip { @apply inline-flex items-center rounded-full border px-3 py-1 text-xs; }
+
+@media (prefers-color-scheme: dark) {
+  body { @apply bg-neutral-950 text-neutral-100; }
+  .glass { @apply bg-neutral-900/50; }
+}
