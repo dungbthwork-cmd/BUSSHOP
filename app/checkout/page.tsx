@@ -1,288 +1,253 @@
-"use client";
+"use client"
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { passengerSchema, paymentSchema } from "@/lib/validators";
-import { z } from "zod";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  Button,
   Input,
   Label,
-  Button,
   Separator,
-} from "@/components/ui";
-import { useMemo, useState } from "react";
-import {
-  mockCreateTicket,
-  mockCreatePayment,
-  mockVerifyPayment,
-} from "@/lib/mockclient";
+  Badge,
+} from "@/components/ui/primitives"
+import { useState } from "react"
 
-type PassengerForm = z.infer<typeof passengerSchema>;
-type PaymentForm = z.infer<typeof paymentSchema>;
+type Errors = {
+  fullName?: string
+  phone?: string
+  email?: string
+}
 
 export default function CheckoutPage() {
-  const search = useSearchParams();
-  const router = useRouter();
+  const router = useRouter()
+  const sp = useSearchParams()
 
-  const routeId = search.get("routeId") || "";
-  const seatsParam = search.get("seats") || "";
-  const seatList = useMemo(
-    () => (seatsParam ? seatsParam.split(",").filter(Boolean) : []),
-    [seatsParam]
-  );
+  const route = {
+    id: sp.get("routeId") ?? "",
+    from: sp.get("from") ?? "",
+    to: sp.get("to") ?? "",
+    date: sp.get("date") ?? "",
+    departAt: sp.get("departAt") ?? "",
+    price: Number(sp.get("price") ?? "0"),
+    brand: sp.get("brand") ?? "",
+  }
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [ticketId, setTicketId] = useState<string | null>(null);
-  const [paymentId, setPaymentId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const seats = (sp.get("seats") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
 
-  const passengerForm = useForm<PassengerForm>({
-    resolver: zodResolver(passengerSchema),
-    defaultValues: {
-      fullName: "",
-      phone: "",
-      email: "",
-    },
-  });
+  const total = route.price * seats.length
 
-  const paymentForm = useForm<PaymentForm>({
-    resolver: zodResolver(paymentSchema),
-    defaultValues: {
-      method: "momo",
-      accept: false,
-    } as any,
-  });
+  // ---- state form thuần ----
+  const [fullName, setFullName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [email, setEmail] = useState("")
+  const [errors, setErrors] = useState<Errors>({})
 
-  const handlePassengerSubmit = passengerForm.handleSubmit(async (values) => {
-    if (!routeId || !seatList.length) {
-      setError("Thiếu thông tin tuyến hoặc ghế đã chọn.");
-      return;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const newErrors: Errors = {}
+    if (!fullName.trim() || fullName.trim().length < 2) {
+      newErrors.fullName = "Nhập họ tên"
     }
-    setLoading(true);
-    setError(null);
-    try {
-      const ticket = await mockCreateTicket({
-        routeId,
-        fullName: values.fullName,
-        phone: values.phone,
-        email: values.email,
-        seats: seatList,
-      });
-      setTicketId(ticket.id);
-      setStep(2);
-    } catch (e: any) {
-      setError(e?.message || "Không tạo được vé. Thử lại sau.");
-    } finally {
-      setLoading(false);
+    if (!phone.trim() || phone.trim().length < 8) {
+      newErrors.phone = "SĐT không hợp lệ"
     }
-  });
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      newErrors.email = "Email không hợp lệ"
+    }
 
-  const handlePaymentSubmit = paymentForm.handleSubmit(async (values) => {
-    if (!ticketId) {
-      setError("Chưa có vé để thanh toán.");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const payment = await mockCreatePayment(ticketId, values.method);
-      setPaymentId(payment.id);
-      await mockVerifyPayment(payment.id, "SUCCESS");
-      setStep(3);
-    } catch (e: any) {
-      setError(e?.message || "Lỗi thanh toán. Thử lại sau.");
-    } finally {
-      setLoading(false);
-    }
-  });
+    setErrors(newErrors)
+
+    if (Object.keys(newErrors).length > 0) return
+
+    // hợp lệ -> push sang /payment (demo)
+    const params = new URLSearchParams({
+      routeId: route.id,
+      from: route.from,
+      to: route.to,
+      date: route.date,
+      departAt: route.departAt,
+      brand: route.brand,
+      price: String(route.price),
+      seats: seats.join(","),
+      fullName: fullName.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      total: String(total),
+    })
+
+    router.push(`/payment?${params.toString()}`)
+  }
 
   return (
-    <section className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-8 lg:px-0">
-      <h1 className="text-xl font-semibold">Thanh toán vé xe</h1>
+    <div className="bg-slate-50 pb-10 pt-6">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 lg:flex-row">
+        {/* Cột chọn ghế + đón trả */}
+        <div className="flex-1 space-y-4">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold">
+                Chọn ghế
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 py-4 text-sm">
+              <p className="text-xs text-slate-600">
+                Bạn đã chọn {seats.length} ghế trên tuyến {route.from} –{" "}
+                {route.to} lúc {route.departAt} ngày {route.date}.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {seats.map((s) => (
+                  <Badge key={s} variant="default">
+                    Ghế {s}
+                  </Badge>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-slate-500">
+                (Demo FE) Sơ đồ ghế chi tiết được hiển thị ở bước trước.
+              </p>
+            </CardContent>
+          </Card>
 
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold">
+                Thông tin đón trả
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 py-4 text-sm">
+              <div>
+                <Label className="mb-1 block text-xs uppercase text-slate-500">
+                  Điểm đón
+                </Label>
+                <Input defaultValue="(Bến xe / Văn phòng)" />
+              </div>
+              <div>
+                <Label className="mb-1 block text-xs uppercase text-slate-500">
+                  Điểm trả
+                </Label>
+                <Input defaultValue="(Trung chuyển / Văn phòng)" />
+              </div>
+              <p className="mt-1 text-[11px] text-slate-500">
+                Ghi chú: thông tin đón/trả là demo để minh họa giao diện,
+                chưa kết nối API thực.
+              </p>
+            </CardContent>
+          </Card>
         </div>
-      )}
 
-      <div className="grid gap-4 md:grid-cols-[2fr,1.3fr]">
-        {/* Cột trái: 3 bước */}
-        <div className="space-y-4">
-          {/* Bước 1: Hành khách */}
-          {step === 1 && (
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  1. Thông tin hành khách
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <form className="space-y-3" onSubmit={handlePassengerSubmit}>
-                  <div>
-                    <Label>Họ tên</Label>
-                    <Input {...passengerForm.register("fullName")} />
+        {/* Cột thông tin khách + tóm tắt */}
+        <div className="flex-[1.1] space-y-4">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold">
+                Thông tin khách hàng
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 py-4 text-sm">
+              <form className="space-y-3" onSubmit={handleSubmit}>
+                <div>
+                  <Label className="mb-1 block text-xs uppercase text-slate-500">
+                    Họ và tên
+                  </Label>
+                  <Input
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                  {errors.fullName && (
                     <p className="mt-1 text-xs text-red-500">
-                      {passengerForm.formState.errors.fullName?.message}
+                      {errors.fullName}
                     </p>
-                  </div>
+                  )}
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <Label>Số điện thoại</Label>
-                    <Input {...passengerForm.register("phone")} />
-                    <p className="mt-1 text-xs text-red-500">
-                      {passengerForm.formState.errors.phone?.message}
-                    </p>
-                  </div>
-                  <div>
-                    <Label>Email</Label>
-                    <Input type="email" {...passengerForm.register("email")} />
-                    <p className="mt-1 text-xs text-red-500">
-                      {passengerForm.formState.errors.email?.message}
-                    </p>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="btn-glow"
-                    >
-                      {loading ? "Đang tạo vé..." : "Tiếp tục"}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Bước 2: Thanh toán */}
-          {step === 2 && (
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  2. Phương thức thanh toán
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form className="space-y-4" onSubmit={handlePaymentSubmit}>
-                  <div className="space-y-2 text-sm">
-                    <Label>Chọn phương thức</Label>
-                    <select
-                      className="w-full rounded-xl border px-3 py-2 text-sm"
-                      {...paymentForm.register("method")}
-                    >
-                      <option value="momo">MoMo</option>
-                      <option value="vnpay">VNPay</option>
-                      <option value="zalopay">ZaloPay</option>
-                      <option value="shopeepay">ShopeePay</option>
-                      <option value="qr">QR ngân hàng</option>
-                      <option value="cod">Thanh toán khi lên xe</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-start gap-2 text-xs">
-                    <input
-                      type="checkbox"
-                      className="mt-1"
-                      {...paymentForm.register("accept")}
+                    <Label className="mb-1 block text-xs uppercase text-slate-500">
+                      Số điện thoại
+                    </Label>
+                    <Input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                     />
-                    <span>
-                      Tôi đồng ý với điều khoản và chính sách hoàn/hủy vé.
-                    </span>
+                    {errors.phone && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.phone}
+                      </p>
+                    )}
                   </div>
-                  <p className="mt-1 text-xs text-red-500">
-                    {
-                      paymentForm.formState.errors.accept
-                        ?.message as any /* "Bạn cần đồng ý điều khoản" */
-                    }
+                  <div>
+                    <Label className="mb-1 block text-xs uppercase text-slate-500">
+                      Email
+                    </Label>
+                    <Input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                    {errors.email && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.email}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-orange-50 p-3 text-[11px] leading-relaxed text-slate-700">
+                  <p className="font-semibold text-orange-700">
+                    Điều khoản &amp; lưu ý
                   </p>
+                  <p>
+                    Quý khách vui lòng có mặt tại bến xuất phát trước giờ xe
+                    khởi hành ít nhất 30 phút, mang theo mã vé hoặc CMND/CCCD.
+                  </p>
+                </div>
 
-                  <div className="flex justify-between gap-2 pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setStep(1)}
-                    >
-                      Quay lại
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="btn-glow"
-                    >
-                      {loading ? "Đang thanh toán..." : "Thanh toán"}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Bước 3: Hoàn tất */}
-          {step === 3 && (
-            <Card className="rounded-2xl border-green-200 bg-green-50">
-              <CardHeader>
-                <CardTitle className="text-base text-green-700">
-                  3. Hoàn tất
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-green-800">
-                <p>Thanh toán thành công! Vé của bạn đã được ghi nhận.</p>
-                <p>
-                  Mã vé: <span className="font-semibold">{ticketId}</span>
-                </p>
-                <p>
-                  Mã thanh toán:{" "}
-                  <span className="font-semibold">{paymentId}</span>
-                </p>
                 <Button
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => router.push("/")}
+                  type="submit"
+                  className="mt-2 w-full rounded-2xl bg-amber-600 text-sm font-semibold text-white shadow-lg hover:opacity-95"
                 >
-                  Về trang chủ
+                  Thanh toán
                 </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              </form>
+            </CardContent>
+          </Card>
 
-        {/* Cột phải: tóm tắt */}
-        <Card className="h-fit rounded-2xl bg-slate-50/60">
-          <CardHeader>
-            <CardTitle className="text-base">Tóm tắt đơn hàng</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div>
-              <p className="font-medium">
-                Tuyến: {search.get("from") || "–"} →{" "}
-                {search.get("to") || "–"}
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold">
+                Thông tin lượt đi
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 py-4 text-sm">
+              <p className="font-semibold">
+                {route.from || "—"} – {route.to || "—"}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Ngày đi: {search.get("date") || "–"}
+              <p className="text-xs text-slate-600">
+                Thời gian xuất bến: {route.departAt || "—"} ngày{" "}
+                {route.date || "—"}
               </p>
-            </div>
-            <Separator />
-            <div>
-              <p className="text-xs text-muted-foreground">Ghế đã chọn</p>
-              <p className="font-medium">
-                {seatList.join(", ") || "Chưa chọn"}
+              <p className="text-xs text-slate-600">
+                Số ghế: {seats.join(", ") || "—"}
               </p>
-            </div>
-            <Separator />
-            <p className="text-xs text-muted-foreground">
-              Đây là mock checkout dùng dữ liệu giả lập. Khi gắn backend thật,
-              chỉ cần thay endpoint mà không đổi UI.
-            </p>
-          </CardContent>
-        </Card>
+              <Separator className="my-2" />
+              <div className="flex items-center justify-between text-sm">
+                <span>Giá vé lượt đi</span>
+                <span>
+                  {route.price.toLocaleString()}đ x {seats.length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm font-semibold text-orange-600">
+                <span>Tổng tiền</span>
+                <span>{total.toLocaleString()}đ</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </section>
-  );
+    </div>
+  )
 }

@@ -1,39 +1,59 @@
+// app/lien-he/page.tsx
+import { Card, CardContent, CardTitle } from "@/components/ui"
 
-"use client"
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, Input, Label, Button } from "@/components/ui"
-import Image from "next/image"
-
-export default function LienHePage(){
-  const [name,setName]=useState("")
-  const [email,setEmail]=useState("")
-  const [msg,setMsg]=useState("")
-  const [ok,setOk]=useState(false)
+export default function LienHePage() {
   return (
-    <section className="grid gap-6 md:grid-cols-[1fr_420px]">
-      <Card>
-        <CardHeader><CardTitle>Gửi thông tin liên hệ</CardTitle></CardHeader>
-        <CardContent className="grid gap-3">
-          <div><Label>Họ tên</Label><Input value={name} onChange={e=>setName(e.target.value)} /></div>
-          <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} /></div>
-          <div><Label>Nội dung</Label><textarea className="min-h-[120px] w-full rounded-2xl border p-2" value={msg} onChange={e=>setMsg(e.target.value)}></textarea></div>
-         <Button onClick={()=>setOk(true)} className="btn-glow">Gửi</Button>
-          {ok && <p className="text-green-600 text-sm">Đã gửi! Chúng tôi sẽ phản hồi sớm qua email/hotline.</p>}
-        </CardContent>
-      </Card>
-      <div className="space-y-3">
+    <div className="bg-slate-50 pb-10 pt-6">
+      <div className="mx-auto max-w-4xl px-4">
+        <h1 className="mb-4 text-xl font-semibold text-slate-900">
+          LIÊN HỆ VỚI CHÚNG TÔI
+        </h1>
+
         <Card>
-          <CardHeader><CardTitle>Trung tâm CSKH</CardTitle></CardHeader>
-          <CardContent className="text-sm">
-            <p>Hotline: <b>1900 6067</b></p>
-            <p>Email: <b>hotro@futa.vn</b></p>
-            <p>Thời gian: 24/7</p>
+          <CardContent className="grid gap-6 py-5 md:grid-cols-[1.3fr,1fr]">
+            {/* Thông tin của bạn */}
+            <div>
+              <CardTitle className="mb-3 text-sm">
+                THÔNG TIN LIÊN HỆ
+              </CardTitle>
+              <ul className="space-y-2 text-sm text-slate-700">
+                <li>
+                  <span className="font-semibold">Tên đơn vị:</span>{" "}
+                  Công ty XYZ (bạn sửa lại tên của bạn)
+                </li>
+                <li>
+                  <span className="font-semibold">Địa chỉ:</span>{" "}
+                  123 Đường ABC, Quận 1, TP.HCM
+                </li>
+                <li>
+                  <span className="font-semibold">Điện thoại:</span>{" "}
+                  0909 000 000
+                </li>
+                <li>
+                  <span className="font-semibold">Email:</span>{" "}
+                  contact@yourcompany.com
+                </li>
+                <li>
+                  <span className="font-semibold">Website:</span>{" "}
+                  yourdomain.com
+                </li>
+              </ul>
+            </div>
+
+            {/* Ghi chú / hướng dẫn */}
+            <div className="rounded-2xl bg-orange-50 p-4 text-sm text-slate-700">
+              <p className="mb-2 font-semibold text-orange-700">
+                Gửi góp ý & hỗ trợ
+              </p>
+              <p>
+                Nếu bạn có bất kỳ thắc mắc, góp ý hoặc cần hỗ trợ, vui
+                lòng liên hệ qua số điện thoại hoặc email bên cạnh. Chúng
+                tôi sẽ phản hồi trong thời gian sớm nhất.
+              </p>
+            </div>
           </CardContent>
         </Card>
-        <Card className="overflow-hidden">
-          <Image src="/images/contact/map.svg" alt="map" width={960} height={320} className="h-40 w-full object-cover" />
-        </Card>
       </div>
-    </section>
+    </div>
   )
 }

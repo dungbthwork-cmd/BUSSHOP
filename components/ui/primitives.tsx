@@ -1,75 +1,297 @@
 "use client"
+
 import * as React from "react"
 
 export function Button(
-  { className="", variant="default", size="md", ...props }:
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "outline"|"ghost"|"default", size?: "sm"|"md"|"lg"|string }
+  {
+    className = "",
+    variant = "default",
+    size = "md",
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    variant?: "outline" | "ghost" | "default"
+    size?: "sm" | "md" | "lg"
+  },
 ) {
-  const base = "inline-flex items-center justify-center rounded-2xl text-sm transition"
-  const sizeCls = size === "sm" ? "px-3 py-1 text-sm h-8" : size === "lg" ? "px-6 py-3 text-base h-12" : "px-4 py-2 text-sm h-10"
-  const style = variant==="outline"
-    ? "border hover:bg-gray-50"
-    : variant==="ghost"
-      ? "hover:bg-transparent"
-      : "bg-amber-600 text-white hover:opacity-95"
-  return <button className={[base, sizeCls, style, className].join(" ")} {...props} />
-}
-export const Input = React.forwardRef<
-  HTMLInputElement,
-  React.InputHTMLAttributes<HTMLInputElement>
->(({ className = "", ...props }, ref) => {
+  const base =
+    "inline-flex items-center justify-center rounded-2xl text-sm transition focus:outline-none focus:ring-2 focus:ring-amber-500/60"
+
+  const variantClass =
+    variant === "outline"
+      ? "border border-slate-200 bg-white hover:bg-slate-50"
+      : variant === "ghost"
+        ? "hover:bg-slate-100"
+        : "bg-amber-600 text-white hover:opacity-95"
+
+  const sizeClass =
+    size === "sm"
+      ? "px-3 py-1.5 text-xs"
+      : size === "lg"
+        ? "px-5 py-2.5 text-base"
+        : "px-4 py-2"
+
   return (
-    <input
-      ref={ref}
-      className={"w-full rounded-2xl border px-3 py-2 text-sm " + className}
+    <button
+      className={[base, variantClass, sizeClass, className].join(" ")}
       {...props}
     />
-  );
-});
+  )
+}
 
-Input.displayName = "Input";
+
+export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const { className = "", ...rest } = props
+  return (
+    <input
+      {...rest}
+      className={
+        "w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none ring-amber-500/60 placeholder:text-slate-400 focus:ring-2 " +
+        className
+      }
+    />
+  )
+}
 
 export function Label(props: React.LabelHTMLAttributes<HTMLLabelElement>) {
-  return <label {...props} className={"mb-1 block text-xs font-medium "+(props.className||"")} />
-}
-export function Card({className="", ...props}: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={"rounded-3xl border bg-white "+className} {...props} />
-}
-export function CardHeader(props: React.HTMLAttributes<HTMLDivElement>) { return <div {...props} className={"p-4 "+(props.className||"")} /> }
-export function CardTitle(props: React.HTMLAttributes<HTMLDivElement>) { return <div {...props} className={"text-lg font-semibold "+(props.className||"")} /> }
-export function CardContent(props: React.HTMLAttributes<HTMLDivElement>) { return <div {...props} className={"p-4 "+(props.className||"")} /> }
-export function Skeleton({className=""}:{className?:string}) { return <div className={"animate-pulse rounded-xl bg-gray-200 "+className} /> }
-export function Badge({variant="default", className="", ...props}:{variant?:"default"|"secondary"|"outline"; className?:string} & React.HTMLAttributes<HTMLSpanElement>) {
-  const style = variant==="secondary" ? "bg-gray-100" : variant==="outline" ? "border" : "bg-amber-100 text-amber-800"
-  return <span {...props} className={"inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs "+style+" "+className} />
-}
-export function Separator(){return <div className="h-px w-full bg-gray-200" />}
-
-export function Slider({min=0,max=100,step=1,value=[0,100],onValueChange}:{min?:number;max?:number;step?:number;value:number[];onValueChange:(v:number[])=>void}){
-  const [v,setV]=React.useState(value)
-  return <div className="flex items-center gap-2">
-    <input type="range" min={min} max={max} step={step} value={v[0]} onChange={e=>{const nv=[Number(e.target.value),v[1]]; setV(nv); onValueChange(nv)}}/>
-    <input type="range" min={min} max={max} step={step} value={v[1]} onChange={e=>{const nv=[v[0],Number(e.target.value)]; setV(nv); onValueChange(nv)}}/>
-    <span className="text-xs text-gray-500">{v[0].toLocaleString()} - {v[1].toLocaleString()}</span>
-  </div>
+  const { className = "", ...rest } = props
+  return (
+    <label
+      {...rest}
+      className={
+        "text-xs font-medium uppercase tracking-wide text-slate-600 " +
+        className
+      }
+    />
+  )
 }
 
-export function Dialog({open, onOpenChange, children}:{open:boolean;onOpenChange:(o:boolean)=>void;children:React.ReactNode}){
-  if(!open) return null
-  return <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40" onClick={()=>onOpenChange(false)}>
-    <div className="w-full max-w-lg rounded-2xl bg-white p-4 shadow-xl" onClick={e=>e.stopPropagation()}>{children}</div>
-  </div>
-}
-export function DialogContent({className="", ...props}: React.HTMLAttributes<HTMLDivElement>){ return <div className={className} {...props}/> }
-export function DialogHeader(props: React.HTMLAttributes<HTMLDivElement>){ return <div {...props} className={"mb-3 "+(props.className||"")} /> }
-export function DialogTitle(props: React.HTMLAttributes<HTMLHeadingElement>){ return <h3 {...props} className={"text-lg font-semibold "+(props.className||"")} /> }
-
-export function Popover({children}:{children:React.ReactNode}){ return <div className="relative">{children}</div> }
-export function PopoverTrigger({children, asChild}:{children:React.ReactNode, asChild?:boolean}){ return <>{children}</> }
-export function PopoverContent({className="", align, ...props}: {className?:string, align?:"start"|"center"|"end"|string} & React.HTMLAttributes<HTMLDivElement>){
-  return <div {...props} className={"absolute z-50 mt-2 rounded-xl border bg-white p-2 shadow "+className} />
+export function Separator(props: React.HTMLAttributes<HTMLDivElement>) {
+  const { className = "", ...rest } = props
+  return (
+    <div
+      {...rest}
+      className={"h-px w-full bg-slate-200 " + className}
+    />
+  )
 }
 
-export function Calendar({selected,onSelect}:{selected:Date;onSelect:(d:Date)=>void}){
-  return <input type="date" value={selected.toISOString().slice(0,10)} onChange={e=>onSelect(new Date(e.target.value))} className="rounded-xl border px-3 py-2 text-sm"/>
+export function Card(props: React.HTMLAttributes<HTMLDivElement>) {
+  const { className = "", ...rest } = props
+  return (
+    <div
+      {...rest}
+      className={
+        "rounded-2xl border border-slate-200 bg-white shadow-sm " + className
+      }
+    />
+  )
+}
+
+export function CardHeader(props: React.HTMLAttributes<HTMLDivElement>) {
+  const { className = "", ...rest } = props
+  return (
+    <div
+      {...rest}
+      className={"border-b border-slate-100 px-4 py-3 " + className}
+    />
+  )
+}
+
+export function CardContent(props: React.HTMLAttributes<HTMLDivElement>) {
+  const { className = "", ...rest } = props
+  return <div {...rest} className={"px-4 py-3 " + className} />
+}
+
+export function CardTitle(props: React.HTMLAttributes<HTMLHeadingElement>) {
+  const { className = "", ...rest } = props
+  return (
+    <h2
+      {...rest}
+      className={"text-base font-semibold text-slate-900 " + className}
+    />
+  )
+}
+
+export function Badge(
+  props: React.HTMLAttributes<HTMLSpanElement> & {
+    variant?: "default" | "outline" | "secondary"
+  },
+) {
+  const { className = "", variant = "default", ...rest } = props
+  const base =
+    "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+  const style =
+    variant === "outline"
+      ? "border border-slate-200 bg-white text-slate-700"
+      : variant === "secondary"
+        ? "bg-slate-100 text-slate-700"
+        : "bg-amber-100 text-amber-700"
+  return <span {...rest} className={[base, style, className].join(" ")} />
+}
+
+export function Skeleton(props: React.HTMLAttributes<HTMLDivElement>) {
+  const { className = "", ...rest } = props
+  return (
+    <div
+      {...rest}
+      className={"animate-pulse rounded-md bg-slate-200/70 " + className}
+    />
+  )
+}
+
+// Slider đơn giản: dùng value[0] là giá trị, onValueChange nhận [v, oldMax]
+type SliderProps = {
+  value: number[]
+  min?: number
+  max?: number
+  step?: number
+  onValueChange?: (v: number[]) => void
+} & React.HTMLAttributes<HTMLDivElement>
+
+export function Slider({
+  value,
+  min = 0,
+  max = 100,
+  step = 1,
+  onValueChange,
+  className = "",
+  ...rest
+}: SliderProps) {
+  const current = Array.isArray(value) && value.length ? value[0] : min
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = Number(e.target.value)
+    const maxVal = Array.isArray(value) && value.length > 1 ? value[1] : max
+    onValueChange?.([v, maxVal])
+  }
+  return (
+    <div {...rest} className={"w-full " + className}>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={current}
+        onChange={handleChange}
+        className="w-full cursor-pointer accent-amber-600"
+      />
+    </div>
+  )
+}
+
+// Dialog đơn giản
+export function Dialog({
+  open,
+  onOpenChange,
+  children,
+}: {
+  open: boolean
+  onOpenChange: (o: boolean) => void
+  children: React.ReactNode
+}) {
+  if (!open) return null
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={() => onOpenChange(false)}
+    >
+      <div
+        className="w-full max-w-lg rounded-2xl bg-white p-4 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+export function DialogContent(
+  props: React.HTMLAttributes<HTMLDivElement>,
+) {
+  const { className = "", ...rest } = props
+  return <div {...rest} className={className} />
+}
+
+export function DialogHeader(
+  props: React.HTMLAttributes<HTMLDivElement>,
+) {
+  const { className = "", ...rest } = props
+  return (
+    <div
+      {...rest}
+      className={"mb-3 flex items-center justify-between " + className}
+    />
+  )
+}
+
+export function DialogTitle(
+  props: React.HTMLAttributes<HTMLHeadingElement>,
+) {
+  const { className = "", ...rest } = props
+  return (
+    <h3
+      {...rest}
+      className={"text-lg font-semibold text-slate-900 " + className}
+    />
+  )
+}
+
+// Popover đơn giản
+export function Popover({ children }: { children: React.ReactNode }) {
+  return <div className="relative inline-block">{children}</div>
+}
+
+export function PopoverTrigger({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return <>{children}</>
+}
+
+export function PopoverContent(
+  props: React.HTMLAttributes<HTMLDivElement>,
+) {
+  const { className = "", ...rest } = props
+  return (
+    <div
+      {...rest}
+      className={
+        "absolute z-50 mt-2 rounded-xl border bg-white p-2 shadow " +
+        className
+      }
+    />
+  )
+}
+
+// Calendar: dùng input type="date"
+export function Calendar({
+  selected,
+  onSelect,
+}: {
+  selected: Date
+  onSelect: (d: Date | null) => void
+}) {
+  const year = selected.getFullYear()
+  const month = String(selected.getMonth() + 1).padStart(2, "0")
+  const day = String(selected.getDate()).padStart(2, "0")
+  const value = `${year}-${month}-${day}`
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value
+    if (!v) {
+      onSelect(null)
+      return
+    }
+    const d = new Date(v + "T00:00:00")
+    onSelect(d)
+  }
+
+  return (
+    <input
+      type="date"
+      value={value}
+      onChange={handleChange}
+      className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm"
+    />
+  )
 }
